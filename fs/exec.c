@@ -1876,7 +1876,6 @@ out_free:
 		reset_files_struct(displaced);
 out_ret:
 	putname(filename);
-	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
 	return retval;
 }
 
