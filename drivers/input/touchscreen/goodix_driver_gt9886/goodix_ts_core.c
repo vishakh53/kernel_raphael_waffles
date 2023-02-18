@@ -818,27 +818,6 @@ static ssize_t goodix_ts_game_mode_store(struct device *dev,
 
 	return count;
 }
-
-static ssize_t bump_sample_rate_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	struct goodix_ts_core *core_data = dev_get_drvdata(dev);
-
-	if (core_data == NULL)
-		return snprintf(buf, PAGE_SIZE, "error\n");
-
-	return snprintf(buf, PAGE_SIZE, "%d\n", goodix_core_data->touch_mode[Touch_Game_Mode][GET_CUR_VALUE]);
-}
-
-static ssize_t bump_sample_rate_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	struct goodix_ts_core *core_data = dev_get_drvdata(dev);
-
-	gtp_set_cur_value(Touch_Game_Mode, (buf[0] != '0') ? 1 : 0);
-	core_data->bump_sample_rate_enabled = buf[0] != '0';
-	return count;
-}
 #endif
 
 static ssize_t udfps_pressed_show(struct device *dev,
@@ -913,8 +892,6 @@ static DEVICE_ATTR(double_tap_enabled, 0664, double_tap_enabled_show, double_tap
 #ifdef CONFIG_TOUCHSCREEN_GOODIX_GTX8_GAMEMODE
 static DEVICE_ATTR(game_mode, 0664,
 		goodix_ts_game_mode_show, goodix_ts_game_mode_store);
-static DEVICE_ATTR(bump_sample_rate, 0664,
-		bump_sample_rate_show, bump_sample_rate_store);
 #endif
 
 static struct attribute *sysfs_attrs[] = {
@@ -932,7 +909,6 @@ static struct attribute *sysfs_attrs[] = {
 	&dev_attr_double_tap_enabled.attr,
 #ifdef CONFIG_TOUCHSCREEN_GOODIX_GTX8_GAMEMODE
 	&dev_attr_game_mode.attr,
-	&dev_attr_bump_sample_rate.attr,
 #endif
 	NULL,
 };
@@ -1931,11 +1907,6 @@ out:
 
 	mutex_unlock(&core_data->work_stat);
 
-#ifdef CONFIG_TOUCHSCREEN_GOODIX_GTX8_GAMEMODE
-	if (core_data->bump_sample_rate_enabled)
-		gtp_set_cur_value(Touch_Game_Mode, 1);
-#endif
-
 	ts_info("Resume end");
 	return 0;
 }
@@ -2420,7 +2391,6 @@ static int goodix_ts_probe(struct platform_device *pdev)
 #endif
 #ifdef CONFIG_TOUCHSCREEN_GOODIX_GTX8_GAMEMODE
 	gtp_init_touchmode_data();
-	core_data->bump_sample_rate_enabled = 0;
 #endif
 out:
 	backlight_unregister_notifier(&core_data->bl_notifier);
